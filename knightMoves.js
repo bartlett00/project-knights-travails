@@ -1,109 +1,3 @@
-function knightMoves(start, end) {
-  //show shortest possible path from start square to end square
-  //outputs all squares knight stops on along the way
-  let totalMoves = 0;
-  let stops = [];
-  let begin = [...start];
-  let endpoint = [...end];
-  let possibleMoves = [
-    [2, 1],
-    [1, 2],
-    [-2, 1],
-    [1, -2],
-    [-2, -1],
-    [-1, -2],
-    [-1, 2],
-    [2, -1],
-  ];
-  let currentTile = [...begin];
-  stops.push([...currentTile]);
-  while (currentTile[0] !== endpoint[0] && currentTile[1] !== endpoint[1]) {
-    if (Math.abs(currentTile[0] - endpoint[0]) >= 2) {
-      if (currentTile[0] - endpoint[0] < 0) {
-        currentTile[0] += 2;
-      } else {
-        currentTile[0] -= 2;
-      }
-      if (currentTile[1] - endpoint[1] < 0) {
-        currentTile[1] += 1;
-      } else {
-        currentTile[1] -= 1;
-      }
-      console.log(currentTile);
-      stops.push([...currentTile]);
-      console.log(stops);
-      totalMoves++;
-      console.log("move complete");
-    } else if (Math.abs(currentTile[0] - endpoint[0]) === 1) {
-      if (currentTile[0] - endpoint[0] < 0) {
-        currentTile[0] += 1;
-      } else {
-        currentTile[0] -= 1;
-      }
-      if (currentTile[1] - endpoint[1] < 0) {
-        currentTile[1] += 2;
-      } else {
-        currentTile[1] -= 2;
-      }
-      console.log(currentTile);
-      stops.push([...currentTile]);
-      console.log(stops);
-      totalMoves++;
-      console.log("move complete");
-    } else if (currentTile[0] - endpoint[0] === 0) {
-      console.log("test");
-      if (currentTile[0] - endpoint[0] >= 0) {
-        currentTile[0] -= 2;
-      } else {
-        currentTile[0] += 2;
-      }
-      if (currentTile[1] - endpoint[1] < 0) {
-        currentTile[1] += 1;
-      } else {
-        currentTile[1] -= 1;
-      }
-      console.log(currentTile);
-      stops.push([...currentTile]);
-      console.log(stops);
-      totalMoves++;
-      console.log("move complete");
-    }
-
-    //function looping infinitely here
-  }
-  console.log(`current tile is: ${currentTile}`);
-  console.log(`endpoint tile is: ${endpoint}`);
-  if (currentTile[0] === endpoint[0] && currentTile[1] === endpoint[1]) {
-    console.log(`total moves: ${totalMoves}`);
-    console.log(stops);
-    console.log("function complete");
-    return;
-  }
-}
-// knightMoves([0, 0], [7, 7]);
-/*
-  must reach endpoint in shortest # of moves
-   if first move is forward 2 steps
-     side step moves 1
-   if first move is 1 step
-     side step moves 2
-  */
-
-/*
-  board is 8x8
-  kinght can move
-    two steps forward, one step side
-    or
-    one step forward, two steps side
-
-    knight cannot move off board 
-    (must stay within bounds of 0,0 to 7,7)
-
-    example:
-      start [0,0] => end [3,3]
-
-*/
-
 function knightMovesTwo(start, end) {
   let queue = [];
   let begin = [...start];
@@ -131,14 +25,16 @@ function knightMovesTwo(start, end) {
   let shortestPath = [];
   let movesTotal = 0;
   let current;
-
+  let previous = null;
   queue.push([...begin]);
   // currentPath.push([...begin]);
   board[begin[0]][begin[1]] = 1;
 
   while (queue.length !== 0) {
     current = queue.shift();
-
+    if (previous === null) {
+      previous = [...current];
+    }
     // currentPath.push([...current]);
     let currentX = current[0];
     let currentY = current[1];
@@ -155,7 +51,7 @@ function knightMovesTwo(start, end) {
         shortestPath = [...currentPath];
       }
       if (currentPath.length <= shortestPath.length) {
-        console.log(shortestPath.length);
+        // console.log(shortestPath.length);
         shortestPath.length = 0;
         shortestPath = [...currentPath];
         currentPath.length = 0;
@@ -187,7 +83,8 @@ function knightMovesTwo(start, end) {
   console.log(shortestPath);
   return;
 }
-knightMovesTwo([0, 0], [3, 3]);
+// knightMovesTwo([0, 0], [3, 3]);
+
 // figure out how to reduce all possible moves => shortest path
 /*
   current method is breadth first approach
@@ -203,4 +100,74 @@ knightMovesTwo([0, 0], [3, 3]);
       it becomes new shortest path
     
       repeat until all moves are made
+
+      //recursively call on each move instead of using a queue structure
+      //keeps track of the "path" automatically
 */
+
+//come back to this later, not sure if list is building correctly
+function buildAdjList(board) {
+  let possibleMoves = [
+    [2, 1],
+    [1, 2],
+    [-2, 1],
+    [1, -2],
+    [-2, -1],
+    [-1, -2],
+    [-1, 2],
+    [2, -1],
+  ];
+  let adjList = [];
+  for (let i = 0; i < board.length; i++) {
+    let adjacencies = [];
+    for (let j = 0; j < possibleMoves.length; j++) {
+      let x = possibleMoves[j][0];
+      let y = possibleMoves[j][1];
+      if (
+        board[i][j].x + x <= 7 &&
+        board[i][j].x + x >= 0 &&
+        board[i][j].y + y <= 7 &&
+        board[i][j].y + y >= 0
+      ) {
+        let newX = board[i][j].x + x;
+        let newY = board[i][j].y + y;
+        let move = [newX, newY];
+        adjacencies.push(move);
+      }
+    }
+    adjList[i] = adjacencies;
+  }
+  return adjList;
+}
+
+function knightMovesBFS(start, end) {
+  let board = [];
+  for (let i = 0; i < 8; i++) {
+    board.push([]);
+    for (let j = 0; j < 8; j++) {
+      board[i].push({
+        x: j,
+        y: i,
+        distance: null,
+        previous: null,
+      });
+    }
+  }
+  console.log(board);
+  let begin = board[start[0]][start[1]];
+  let endpoint = board[end[0]][end[1]];
+  begin.distance = 0;
+  let adjList = buildAdjList(board);
+  let queue = [];
+  // queue.push([...begin]);
+  console.log(adjList);
+  console.log({ begin, endpoint });
+  let cursor;
+  // while (cursor !== endpoint) {
+  //   cursor = queue.shift();
+
+  //   for (let i = 0; i < adjList[cursor].length; i++) {}
+  // }
+}
+
+knightMovesBFS([0, 0], [3, 3]);
