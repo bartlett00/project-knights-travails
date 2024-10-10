@@ -106,6 +106,17 @@ function knightMovesTwo(start, end) {
 */
 
 //come back to this later, not sure if list is building correctly
+/*
+  adjList:
+    create arr to store list
+    loop through length of board (8 rows, x 0 - 7)
+    create arr to store neighbors of x index
+    for each of the 8 possible moves:
+      if move is on the board
+        add it to neighors arr
+
+    list for x index = neighbor arr
+*/
 function buildAdjList(board) {
   let possibleMoves = [
     [2, 1],
@@ -118,24 +129,30 @@ function buildAdjList(board) {
     [2, -1],
   ];
   let adjList = [];
+  for (let i = 0; i < 8; i++) {
+    adjList.push([]);
+  }
+
   for (let i = 0; i < board.length; i++) {
-    let adjacencies = [];
-    for (let j = 0; j < possibleMoves.length; j++) {
-      let x = possibleMoves[j][0];
-      let y = possibleMoves[j][1];
-      if (
-        board[i][j].x + x <= 7 &&
-        board[i][j].x + x >= 0 &&
-        board[i][j].y + y <= 7 &&
-        board[i][j].y + y >= 0
-      ) {
-        let newX = board[i][j].x + x;
-        let newY = board[i][j].y + y;
-        let move = [newX, newY];
-        adjacencies.push(move);
+    for (let h = 0; h < board[i].length; h++) {
+      let adjacencies = [];
+      for (let j = 0; j < possibleMoves.length; j++) {
+        let x = possibleMoves[j][0];
+        let y = possibleMoves[j][1];
+        if (
+          board[i][h].x + x <= 7 &&
+          board[i][h].x + x >= 0 &&
+          board[i][h].y + y <= 7 &&
+          board[i][h].y + y >= 0
+        ) {
+          let newX = board[i][h].x + x;
+          let newY = board[i][h].y + y;
+          let move = [newX, newY];
+          adjacencies.push(move);
+        }
       }
+      adjList[i][h] = adjacencies;
     }
-    adjList[i] = adjacencies;
   }
   return adjList;
 }
@@ -153,21 +170,47 @@ function knightMovesBFS(start, end) {
       });
     }
   }
-  console.log(board);
+
   let begin = board[start[0]][start[1]];
   let endpoint = board[end[0]][end[1]];
+  let endpointCoords = [endpoint.x, endpoint.y];
   begin.distance = 0;
   let adjList = buildAdjList(board);
   let queue = [];
-  // queue.push([...begin]);
-  console.log(adjList);
+  queue.push(begin);
+  // console.log(adjList);
   console.log({ begin, endpoint });
-  let cursor;
-  // while (cursor !== endpoint) {
-  //   cursor = queue.shift();
+  let cursor = queue.shift();
+  while (cursor.x != endpointCoords[0] && cursor.y != endpointCoords[1]) {
+    if (queue.length > 0) {
+      cursor = queue.shift();
+    }
+    for (let i = 0; i < adjList[cursor.x][cursor.y].length; i++) {
+      let neighborIndex = adjList[cursor.x][cursor.y][i];
+      if (neighborIndex === endpointCoords) {
+        board[neighborIndex.x][neighborIndex.y].previous = [cursor.x, cursor.y];
+        let moveset = [];
+        createMoveset(board, neighborIndex, moveset);
+        console.log(`Your path was ${moveset.length} moves long.`);
+        console.log("Your path was:");
+        console.log(moveset);
+      } else {
+        if (neighborIndex.distance === null) {
+          neighborIndex.distance = cursor.distance + 1;
+          neighborIndex.previous = [cursor.x, cursor.y];
+          queue.push(neighborIndex);
+        }
+      }
+    }
+  }
 
-  //   for (let i = 0; i < adjList[cursor].length; i++) {}
-  // }
+  function createMoveset(board, index, moves) {
+    if (index.previous === null) {
+      return;
+    } else {
+      moves.unshift([index.x, index.y]);
+      createMoveset(board, index.previous, moves);
+    }
+  }
 }
-
 knightMovesBFS([0, 0], [3, 3]);
